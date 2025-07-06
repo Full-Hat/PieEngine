@@ -8,7 +8,13 @@
       "binaryDir": "build/debug",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
+        "VCPKG_CHAINLOAD_TOOLCHAIN_FILE": "",
         "CMAKE_TOOLCHAIN_FILE": "./vcpkg/scripts/buildsystems/vcpkg.cmake"
+      },
+      "vendor": {
+        "jetbrains.com/clion": {
+          "toolchain": "CLang"
+        }
       }
     }
   ]

@@ -1,6 +1,10 @@
+import window;
 #include <GLFW/glfw3.h>
 
+
 int main() {
+    print_hello();
+
     if (!glfwInit()) return -1;
 
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
