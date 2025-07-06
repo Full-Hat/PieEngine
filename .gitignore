@@ -2,5 +2,4 @@ cmake-build-debug
 .idea
 build
 vcpkg_installed
-vcpkg
 gcm.cache
