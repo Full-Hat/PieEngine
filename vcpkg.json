@@ -1,0 +1,8 @@
+{
+  "name": "pie-engine",
+  "version": "0.1",
+  "license": "MIT",
+  "dependencies": [
+    "glfw3"
+  ]
+}
