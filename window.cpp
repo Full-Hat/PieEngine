@@ -4,6 +4,7 @@ module;
 #include <memory>
 #include <GLFW/glfw3.h>
 #include <iostream>
+#include <format>
 
 module window;
 
@@ -49,7 +50,7 @@ GlfwWindow::GlfwWindow() {
     m_window = create_window(m_width, m_height, m_title);
     m_initialized = true;
     ++s_window_count;
-    logger->info(std::format("Window created. Total windows: {}", s_window_count));
+    logger->info(std::format("Window created. Total windows: {}", s_window_count.load()));
 }
 
 GlfwWindow::GlfwWindow(int width, int height, std::string title) {
@@ -60,7 +61,7 @@ GlfwWindow::GlfwWindow(int width, int height, std::string title) {
     m_window = create_window(m_width, m_height, m_title);
     m_initialized = true;
     ++s_window_count;
-    logger->info(std::format("Window created. Total windows: {}", s_window_count));
+    logger->info(std::format("Window created. Total windows: {}", s_window_count.load()));
 }
 
 GlfwWindow::~GlfwWindow() {
@@ -72,7 +73,7 @@ GlfwWindow::~GlfwWindow() {
     // Only decrement count if this window was actually initialized
     if (m_initialized) {
         --s_window_count;
-        logger->info(std::format("Window destroyed. Remaining windows: {}", s_window_count));
+        logger->info(std::format("Window destroyed. Remaining windows: {}", s_window_count.load()));
         if (s_window_count == 0 && !is_manual_glfw_terminate) {
             logger->info("No more windows, terminating GLFW");
             terminate_glfw();

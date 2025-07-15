@@ -76,6 +76,6 @@ protected:
     bool m_initialized = false; // Track if window was successfully created
 
 private:
-    static inline size_t s_window_count = 0;
+    static inline std::atomic_size_t s_window_count = 0;
 };
 }

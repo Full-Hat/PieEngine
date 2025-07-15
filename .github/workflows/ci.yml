@@ -4,23 +4,54 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-and-test:
+  macos-build-and-test:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
-      - run: |
+      - name: install dependencies
+        run: |
           /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
           brew install llvm@20
-          LLVM_VERSION=$(/opt/homebrew/opt/llvm/bin/llvm-config --version)
           brew install cmake
           brew install ninja
           brew install vcpkg
+      - name: install package manager and libraries
+        run: |
           ./vcpkg/bootstrap-vcpkg.sh
-          pwd
           ./vcpkg/vcpkg install
+      - name: configure and build project
+        run: |
+          LLVM_VERSION=$(/opt/homebrew/opt/llvm/bin/llvm-config --version)
           cmake -DCMAKE_C_COMPILER=/opt/homebrew/Cellar/llvm/${LLVM_VERSION}/bin/clang -DCMAKE_CXX_COMPILER=/opt/homebrew/Cellar/llvm/${LLVM_VERSION}/bin/clang++ --preset VcpkgDebug
+          cmake --build build/debug
+  ubuntu-build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: install system dependencies
+        run: |
+          # common stuff
+          sudo apt-get update && sudo apt-get install -y cmake build-essential ninja-build git curl zip unzip tar
+          # clang
+          sudo apt-get update && sudo apt-get install -y wget gnupg software-properties-common lsb-release
+          wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add - \
+            && sudo add-apt-repository "deb http://apt.llvm.org/$(lsb_release -cs)/ llvm-toolchain-$(lsb_release -cs)-20 main" \
+            && sudo apt-get update
+          sudo apt-get install -y clang-20 lld-20 llvm-20-tools llvm-20-dev
+          # glfw dependencies
+          sudo apt-get install -y libxinerama-dev libxcursor-dev xorg-dev libglu1-mesa-dev pkg-config
+          sudo rm -rf /var/lib/apt/lists/*
+      - name: install package manager and libraries
+        run: |
+          ./vcpkg/bootstrap-vcpkg.sh
+          ./vcpkg/vcpkg install
+      - name: configure and build project
+        run: |
+          cmake -DCMAKE_C_COMPILER=/usr/bin/clang-20 -DCMAKE_CXX_COMPILER=/usr/bin/clang++-20 --preset VcpkgDebug
           cmake --build build/debug
 
 # name: CI
