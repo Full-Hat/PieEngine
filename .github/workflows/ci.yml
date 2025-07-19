@@ -69,7 +69,7 @@ jobs:
       - name: upload binaries
         uses: actions/upload-artifact@v4
         with:
-          name: macos-artifacts
+          name: ubuntu-artifacts
           path: |
             build/debug/Testing/
             build/debug/bin/
@@ -101,7 +101,7 @@ jobs:
       - name: upload binaries
         uses: actions/upload-artifact@v4
         with:
-          name: macos-artifacts
+          name: windows-artifacts
           path: |
             build/debug/Testing/
             build/debug/bin/
