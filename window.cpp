@@ -13,6 +13,15 @@ using namespace pie_engine;
 // Global GLFW initialization state
 static bool g_glfw_initialized = false; // Start as false, will be set based on manual flag
 
+bool isHeadless() {
+    #if defined(__linux__) || defined(__unix__)
+        const char* disp = std::getenv("DISPLAY");
+        return (disp == nullptr || std::string(disp).empty());
+    #else
+        return false;
+    #endif
+}
+
 GLFWwindow* create_window(int width, int height, std::string title) {
     // Initialize GLFW only once
     if (!g_glfw_initialized) {
@@ -39,8 +48,10 @@ GLFWwindow* create_window(int width, int height, std::string title) {
     
     // For headless environments (like CI), we can create an offscreen context
     // This allows tests to run without a display server
-    glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
-    
+    if (isHeadless()) {
+        glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
+    }
+
     // Additional hints for better compatibility on Linux
     glfwWindowHint(GLFW_CONTEXT_CREATION_API, GLFW_NATIVE_CONTEXT_API);
     
