@@ -34,10 +34,30 @@ GLFWwindow* create_window(int width, int height, std::string title) {
         logger->info("GLFW initialized successfully");
     }
 
+    // Set GLFW hints for better compatibility
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+    
+    // For headless environments (like CI), we can create an offscreen context
+    // This allows tests to run without a display server
+    glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
+    
+    // Additional hints for better compatibility on Linux
+    glfwWindowHint(GLFW_CONTEXT_CREATION_API, GLFW_NATIVE_CONTEXT_API);
+    
     GLFWwindow* window = glfwCreateWindow(width, height, title.c_str(), nullptr, nullptr);
     if (!window) {
-        logger->error(std::format("Failed to create GLFW window: {}x{} with title '{}'", width, height, title));
+        // Get the specific error from GLFW
+        const char* error_description;
+        glfwGetError(&error_description);
+        logger->error(std::format("Failed to create GLFW window: {}x{} with title '{}'. Error: {}", 
+                                 width, height, title, error_description ? error_description : "Unknown error"));
+        
+        // On Linux/Ubuntu, this is often due to missing display server
+        #ifdef __linux__
+        logger->warn("This might be due to running in a headless environment without X11 display server");
+        logger->warn("Consider setting DISPLAY environment variable or running with Xvfb");
+        #endif
+        
         throw std::runtime_error("Failed to create GLFW window");
     }
 

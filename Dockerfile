@@ -8,8 +8,11 @@ RUN wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add - \
     && apt-get update
 RUN apt-get install -y clang-20 lld-20 llvm-20-tools llvm-20-dev
 
-    # GLFW requirements
+# GLFW requirements for X11
 RUN apt-get install -y libxinerama-dev libxcursor-dev xorg-dev libglu1-mesa-dev pkg-config
+
+# Install Xvfb for virtual display server (essential for GLFW tests in headless environments)
+RUN apt-get install -y xvfb x11-utils
 
 RUN rm -rf /var/lib/apt/lists/*
 
@@ -26,4 +29,22 @@ WORKDIR /app
 RUN cmake -DCMAKE_C_COMPILER=/usr/bin/clang-20 -DCMAKE_CXX_COMPILER=/usr/bin/clang++-20 --preset VcpkgDebug
 RUN cmake --build build/debug
 
-CMD ["./build/myapp"]
+# Create a script to run tests with virtual display
+RUN echo '#!/bin/bash\n\
+# Start Xvfb virtual display server\n\
+Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &\n\
+export DISPLAY=:99\n\
+\n\
+# Wait a moment for Xvfb to start\n\
+sleep 2\n\
+\n\
+# Run the tests\n\
+ctest --output-on-failure --extra-verbose\n\
+\n\
+# Clean up\n\
+pkill Xvfb' > /app/run_tests.sh && chmod +x /app/run_tests.sh
+
+WORKDIR /app/build/debug
+
+# Run tests with virtual display
+CMD ["/app/run_tests.sh"]

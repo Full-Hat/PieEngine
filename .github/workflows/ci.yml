@@ -54,6 +54,10 @@ jobs:
           sudo apt-get install -y clang-20 lld-20 llvm-20-tools llvm-20-dev
           # glfw dependencies
           sudo apt-get install -y libxinerama-dev libxcursor-dev xorg-dev libglu1-mesa-dev pkg-config
+          # BEGIN FOR HEADLESS TESTS, DON'T USE ON SYSTEMS WITH A DISPLAY
+          # Install Xvfb for virtual display server (essential for GLFW tests in headless environments)
+          sudo apt-get install -y xvfb x11-utils
+          # END FOR HEADLESS TESTS, DON'T USE ON SYSTEMS WITH A DISPLAY
           sudo rm -rf /var/lib/apt/lists/*
       - name: install package manager and libraries
         run: |
@@ -65,6 +69,16 @@ jobs:
           cmake --build build/debug
       - name: run tests
         run: |
+          # BEGIN FOR HEADLESS TESTS, DON'T USE ON SYSTEMS WITH A DISPLAY
+          # Start Xvfb virtual display server
+          Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
+          export DISPLAY=:99
+          
+          # Wait a moment for Xvfb to start
+          sleep 2
+          # END FOR HEADLESS TESTS, DON'T USE ON SYSTEMS WITH A DISPLAY
+
+          # Run the tests
           ctest --test-dir ./build/debug --output-on-failure --extra-verbose
       - name: upload binaries
         uses: actions/upload-artifact@v4
