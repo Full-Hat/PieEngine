@@ -8,47 +8,55 @@ module;
 #include <memory>
 #include <vector>
 #include <cassert>
+#include <spdlog/logger.h>
 
 export module window.test;
 
 import window;
+import test_utils;
 
 export namespace pie_engine::test {
 
 class WindowTest {
+protected:
+    static inline test_utils::Logger m_logger;
+
 public:
-    static void run_all_tests() {
-        std::cout << "Running window tests..." << std::endl;
+    static void run_all_tests(const test_utils::Logger& logger) {
+        m_logger = logger;
+        m_logger.additional_info = "window";
+
+        m_logger.info("Running window tests...");
         
         test_single_window_creation();
         test_multiple_windows();
         test_window_destruction();
         test_window_lifecycle();
         
-        std::cout << "All window tests passed!" << std::endl;
+        m_logger.info("All window tests passed!");
     }
 
 private:
     static void test_single_window_creation() {
-        std::cout << "  Testing single window creation..." << std::endl;
+        m_logger.info("Testing single window creation...");
         
         // Test default constructor
         {
             GlfwWindow window;
             assert(window.IsOpen());
-            std::cout << "    ✓ Default window created successfully" << std::endl;
+            m_logger.info("✓ Default window created successfully");
         }
         
         // Test parameterized constructor
         {
             GlfwWindow window(1024, 768, "Test Window");
             assert(window.IsOpen());
-            std::cout << "    ✓ Parameterized window created successfully" << std::endl;
+            m_logger.info("✓ Parameterized window created successfully");
         }
     }
     
     static void test_multiple_windows() {
-        std::cout << "  Testing multiple windows..." << std::endl;
+        m_logger.info("Testing multiple windows...");
         
         std::vector<std::unique_ptr<GlfwWindow>> windows;
         
@@ -62,11 +70,11 @@ private:
             assert(window->IsOpen());
         }
         
-        std::cout << "    ✓ Multiple windows created successfully" << std::endl;
+        m_logger.info("✓ Multiple windows created successfully");
     }
     
     static void test_window_destruction() {
-        std::cout << "  Testing window destruction..." << std::endl;
+        m_logger.info("Testing window destruction...");
         
         // Test that window is properly destroyed when going out of scope
         {
@@ -75,11 +83,11 @@ private:
         }
         // Window should be destroyed here
         
-        std::cout << "    ✓ Window destruction test passed" << std::endl;
+        m_logger.info("✓ Window destruction test passed");
     }
     
     static void test_window_lifecycle() {
-        std::cout << "  Testing window lifecycle..." << std::endl;
+        m_logger.info("Testing window lifecycle...");
         
         GlfwWindow window(800, 600, "Lifecycle Test");
         
@@ -95,7 +103,7 @@ private:
             assert(!window.IsOpen());
         }
         
-        std::cout << "    ✓ Window lifecycle test passed" << std::endl;
+        m_logger.info("✓ Window lifecycle test passed");
     }
 };
 

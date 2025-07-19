@@ -64,6 +64,7 @@ public:
     void PollEvents(); // throws exceptions::WindowClosedException if window is closed, fetch updates
     void FireCloseEvent(); // throws exceptions::WindowClosedException
 
+    [[nodiscard]]
     bool IsOpen() const noexcept;
     
 protected:

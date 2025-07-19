@@ -26,6 +26,16 @@ jobs:
           LLVM_VERSION=$(/opt/homebrew/opt/llvm/bin/llvm-config --version)
           cmake -DCMAKE_C_COMPILER=/opt/homebrew/Cellar/llvm/${LLVM_VERSION}/bin/clang -DCMAKE_CXX_COMPILER=/opt/homebrew/Cellar/llvm/${LLVM_VERSION}/bin/clang++ --preset VcpkgDebug
           cmake --build build/debug
+      - name: run tests
+        run: |
+          ctest --test-dir ./build/debug --output-on-failure --extra-verbose
+      - name: upload binaries
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-artifacts
+          path: |
+            build/debug/Testing/
+            build/debug/bin/
   ubuntu-build-and-test:
     runs-on: ubuntu-latest
     steps:
@@ -53,6 +63,16 @@ jobs:
         run: |
           cmake -DCMAKE_C_COMPILER=/usr/bin/clang-20 -DCMAKE_CXX_COMPILER=/usr/bin/clang++-20 --preset VcpkgDebug
           cmake --build build/debug
+      - name: run tests
+        run: |
+          ctest --test-dir ./build/debug --output-on-failure --extra-verbose
+      - name: upload binaries
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-artifacts
+          path: |
+            build/debug/Testing/
+            build/debug/bin/
   windows-build-and-test:
     runs-on: windows-latest
     steps:
@@ -74,157 +94,14 @@ jobs:
         run: |
           cmake -DCMAKE_C_COMPILER="C:\Program Files\LLVM\bin\clang.exe" -DCMAKE_CXX_COMPILER="C:\Program Files\LLVM\bin\clang++.exe" --preset VcpkgDebug
           cmake --build build/debug
-
-# name: CI
-
-# on:
-#   push:
-#     branches: [ main, develop ]
-#   pull_request:
-#     branches: [ main, develop ]
-#   workflow_dispatch:
-
-# env:
-#   VCPKG_BINARY_SOURCES: "clear;nuget,GitHub,readwrite"
-#   VCPKG_NUGET_REPOSITORY: https://github.com/actions/vcpkg-cache
-
-# jobs:
-#   build-and-test:
-#     strategy:
-#       matrix:
-#         os: [ubuntu-latest, windows-latest, macos-latest]
-
-#     runs-on: ${{ matrix.os }}
-
-#     steps:
-#     - name: Checkout
-#       uses: actions/checkout@v4
-#       with:
-#         submodules: recursive
-
-#     - name: Install dependencies (Ubuntu)
-#       if: matrix.os == 'ubuntu-latest'
-#       run: |
-#         chmod +x install_dependencies.sh
-#         ./install_dependencies.sh
-
-#     - name: Setup vcpkg
-#       uses: lukka/run-vcpkg@v11
-
-#     - name: Setup CMake
-#       uses: jwlawson/actions-setup-cmake@v1.13
-#       with:
-#         cmake-version: '3.28.0'
-
-#     - name: Setup C++ compiler (Ubuntu)
-#       if: matrix.os == 'ubuntu-latest'
-#       run: |
-#         sudo apt-get update
-#         sudo apt-get install -y clang-16
-#         echo "CC=clang-16" >> $GITHUB_ENV
-#         echo "CXX=clang++-16" >> $GITHUB_ENV
-
-#     - name: Setup C++ compiler (macOS)
-#       if: matrix.os == 'macos-latest'
-#       run: |
-#         echo "CC=clang" >> $GITHUB_ENV
-#         echo "CXX=clang++" >> $GITHUB_ENV
-
-#     - name: Configure CMake
-#       run: cmake --preset VcpkgDebug
-
-#     - name: Build
-#       run: cmake --build build/debug --config Debug --parallel
-
-#     - name: Test
-#       run: cmake --build build/debug --config Debug --target test_exe
-
-#     - name: Run tests
-#       run: |
-#         if [ "${{ matrix.os }}" = "windows-latest" ]; then
-#           ./build/debug/test_exe.exe
-#         else
-#           ./build/debug/test_exe
-#         fi
-
-#     - name: Upload test results
-#       if: always()
-#       uses: actions/upload-artifact@v4
-#       with:
-#         name: test-results-${{ matrix.os }}-clang
-#         path: |
-#           logs/
-#           build/Testing/
-#         retention-days: 7
-
-#   build-debug:
-#     runs-on: ubuntu-latest
-    
-#     steps:
-#     - name: Checkout
-#       uses: actions/checkout@v4
-#       with:
-#         submodules: recursive
-
-#     - name: Install dependencies
-#       run: |
-#         chmod +x install_dependencies.sh
-#         ./install_dependencies.sh
-
-#     - name: Setup vcpkg
-#       uses: lukka/run-vcpkg@v11
-
-#     - name: Setup CMake
-#       uses: jwlawson/actions-setup-cmake@v1.13
-#       with:
-#         cmake-version: '3.28.0'
-
-#     - name: Configure CMake (Debug)
-#       run: cmake --preset VcpkgDebug
-
-#     - name: Build (Debug)
-#       run: cmake --build build/debug --config Debug --parallel
-
-#     - name: Test (Debug)
-#       run: cmake --build build/debug --config Debug --target test_exe
-
-#     - name: Run tests (Debug)
-#       run: ./build/debug/test_exe
-
-#   code-quality:
-#     runs-on: ubuntu-latest
-    
-#     steps:
-#     - name: Checkout
-#       uses: actions/checkout@v4
-#       with:
-#         submodules: recursive
-
-#     - name: Install dependencies
-#       run: |
-#         chmod +x install_dependencies.sh
-#         ./install_dependencies.sh
-
-#     - name: Setup vcpkg
-#       uses: lukka/run-vcpkg@v11
-
-#     - name: Setup CMake
-#       uses: jwlawson/actions-setup-cmake@v1.13
-#       with:
-#         cmake-version: '3.28.0'
-
-#     - name: Configure CMake with sanitizers
-#       run: |
-#         cmake --preset VcpkgDebug \
-#           -DCMAKE_CXX_FLAGS="-fsanitize=address,undefined -fno-omit-frame-pointer" \
-#           -DCMAKE_C_FLAGS="-fsanitize=address,undefined -fno-omit-frame-pointer" \
-#           -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=address,undefined"
-
-#     - name: Build with sanitizers
-#       run: cmake --build build/debug --config Debug --parallel
-
-#     - name: Test with sanitizers
-#       run: cmake --build build/debug --config Debug --target test_exe
-
-#     - name: Run tests with sanitizers
-#       run: ./build/debug/test_exe 
+      - name: run tests
+        shell: pwsh
+        run: |
+          ctest --test-dir ./build/debug --output-on-failure --extra-verbose
+      - name: upload binaries
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-artifacts
+          path: |
+            build/debug/Testing/
+            build/debug/bin/
