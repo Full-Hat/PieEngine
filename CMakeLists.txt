@@ -14,6 +14,16 @@ message(STATUS "C++ Compiler: ${CMAKE_CXX_COMPILER}")
 message(STATUS "C++ Compiler Version: ${CMAKE_CXX_COMPILER_VERSION}")
 message(STATUS "C++ Compiler ID: ${CMAKE_CXX_COMPILER_ID}")
 
+if(APPLE)
+    set(SCRIPT_PATH ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/remove_from_malware_list.command)
+
+    file(WRITE ${SCRIPT_PATH} "#!/usr/bin/env bash\n")
+    file(APPEND ${SCRIPT_PATH} "xattr -d com.apple.quarantine exe")
+endif()
+
+find_package(glfw3 CONFIG REQUIRED)
+find_package(spdlog CONFIG REQUIRED)
+
 set(ENGINE_SOURCES
     window.cpp
 )
@@ -32,11 +42,7 @@ target_sources(exe PUBLIC
         FILES ${MODULES}
 )
 
-find_package(glfw3 CONFIG REQUIRED)
-target_link_libraries(exe PRIVATE glfw)
-
-find_package(spdlog CONFIG REQUIRED)
-target_link_libraries(exe PRIVATE spdlog::spdlog)
+target_link_libraries(exe PRIVATE glfw spdlog::spdlog)
 
 # Test executable
 enable_testing()
@@ -54,7 +60,6 @@ target_sources(test_exe PUBLIC
         FILES ${ALL_MODULES}
 )
 
-target_link_libraries(test_exe PRIVATE glfw)
-target_link_libraries(test_exe PRIVATE spdlog::spdlog)
+target_link_libraries(test_exe PRIVATE glfw spdlog::spdlog)
 
 add_test(NAME global_test COMMAND test_exe)
