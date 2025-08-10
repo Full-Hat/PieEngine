@@ -76,3 +76,8 @@ void Vulkan::InitInstance()
     }
     logger->info(std::format("instance created"));
 }
+
+void Vulkan::DestroyInstance() const
+{
+    m_Instance.destroy();
+}

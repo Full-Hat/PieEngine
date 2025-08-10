@@ -28,6 +28,7 @@ auto logger = [](){
 export class Vulkan {
 public:
     void InitInstance();
+    void DestroyInstance() const;
 
 private:
     vk::Instance m_Instance;
