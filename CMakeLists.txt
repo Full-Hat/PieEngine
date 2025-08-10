@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5.0)
+cmake_minimum_required(VERSION 3.26.0)
 
 project(tutorial)
 
@@ -23,43 +23,49 @@ endif()
 
 find_package(glfw3 CONFIG REQUIRED)
 find_package(spdlog CONFIG REQUIRED)
+find_package(glm CONFIG REQUIRED)
+find_package(Vulkan REQUIRED)
 
-set(ENGINE_SOURCES
-    window.cpp
-)
+add_subdirectory(src/test)
+add_subdirectory(src/window)
+add_subdirectory(src/vk_renderer)
 
 # Main executable
 add_executable(exe)
+target_compile_features(exe PUBLIC cxx_std_20)
 
-target_sources(exe PRIVATE
+target_sources(exe
+    PRIVATE
         main.cpp
-        ${ENGINE_SOURCES}
-)
-file(GLOB MODULES *.cppm)
-message(STATUS "Found Modules: ${MODULES}")
-target_sources(exe PUBLIC
-        FILE_SET CXX_MODULES
-        FILES ${MODULES}
 )
 
-target_link_libraries(exe PRIVATE glfw spdlog::spdlog)
+target_link_libraries(exe PRIVATE
+        glfw
+        spdlog::spdlog
+        Vulkan::Vulkan
+        window_lib
+        vk_renderer_lib
+)
 
 # Test executable
 enable_testing()
 add_executable(test_exe)
 
-target_sources(test_exe PRIVATE
+target_sources(test_exe
+    PRIVATE
         test_main.cpp
-        ${ENGINE_SOURCES}
-)
-
-# Include all modules for test executable
-file(GLOB ALL_MODULES *.cppm)
-target_sources(test_exe PUBLIC
+        ${NON_TEST_CPP_UNITS}
+    PUBLIC
         FILE_SET CXX_MODULES
-        FILES ${ALL_MODULES}
+        FILES ${NON_TEST_MODULE_UNITS}
 )
 
-target_link_libraries(test_exe PRIVATE glfw spdlog::spdlog)
+target_link_libraries(test_exe PRIVATE
+        glfw
+        spdlog::spdlog
+        Vulkan::Vulkan
+        window_lib
+        test_lib
+)
 
 add_test(NAME global_test COMMAND test_exe)

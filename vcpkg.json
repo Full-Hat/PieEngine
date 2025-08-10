@@ -4,6 +4,10 @@
   "license": "MIT",
   "dependencies": [
     "glfw3",
-    "spdlog"
+    "spdlog",
+    "glm",
+    "vulkan",
+    "vulkan-sdk-components",
+    "vulkan-headers"
   ]
 }
