@@ -3,7 +3,6 @@ module;
 #include <spdlog/spdlog.h>
 #include <spdlog/sinks/basic_file_sink.h>
 #include <string>
-#include <string_view>
 #include <format>
 
 export module test_utils;
@@ -33,7 +32,7 @@ struct Logger {
 };
 
 Logger logger = [](){
-    auto logger = spdlog::basic_logger_mt("pie_engine::tests", "logs/tests.txt");
+    const auto logger = spdlog::basic_logger_mt("pie_engine::tests", "logs/tests.txt");
     // print all, flush on all
     logger->flush_on(spdlog::level::trace);
     logger->set_level(spdlog::level::trace);

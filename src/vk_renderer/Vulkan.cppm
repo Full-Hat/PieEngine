@@ -4,12 +4,12 @@
 module;
 
 #include <GLFW/glfw3.h>
-
-#include "vulkan/vulkan.hpp"
 #include "spdlog/spdlog.h"
 #include "spdlog/sinks/rotating_file_sink.h"
 
 export module Vulkan;
+
+import vulkan_hpp;
 
 constexpr int_fast32_t one_megabyte = 1048576;
 auto logger = [](){
@@ -28,8 +28,8 @@ auto logger = [](){
 export class Vulkan {
 public:
     void InitInstance();
-    void DestroyInstance() const;
 
 private:
-    vk::Instance m_Instance;
+    vk::raii::Instance m_instance { nullptr };
+    vk::raii::Context m_context;
 };

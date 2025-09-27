@@ -4,7 +4,6 @@
 module;
 #include <cstdint>
 #include <format>
-#define VULKAN_HPP_NO_STRUCT_CONSTRUCTORS
 #include <vulkan/vulkan.hpp>
 export module Vulkan.Version;
 
@@ -32,23 +31,19 @@ export struct Version
     std::string ToString() const { return std::format("{}.{}.{}.{}", GetVariant(), GetMajor(), GetMinor(), GetPatch()); }
 
     [[nodiscard]]
-    bool operator<(const uint32_t otherVersion) const
+    auto operator<=>(const uint32_t otherVersion) const
     {
         const Version Other(otherVersion);
-        if (GetVariant() != Other.GetVariant()) { return GetVariant() < Other.GetVariant(); }
-        if (GetMajor() != Other.GetMajor()) { return GetMajor() < Other.GetMajor(); }
-        if (GetMinor() != Other.GetMinor()) { return GetMinor() < Other.GetMinor(); }
-        return GetPatch() < Other.GetPatch();
+        if (GetVariant() != Other.GetVariant()) { return GetVariant() <=> Other.GetVariant(); }
+        if (GetMajor() != Other.GetMajor()) { return GetMajor() <=> Other.GetMajor(); }
+        if (GetMinor() != Other.GetMinor()) { return GetMinor() <=> Other.GetMinor(); }
+        return GetPatch() <=> Other.GetPatch();
     }
 
     [[nodiscard]]
-    bool operator>(const uint32_t otherVersion) const
+    auto operator<=>(const Version &otherVersion) const
     {
-        const Version Other(otherVersion);
-        if (GetVariant() != Other.GetVariant()) { return GetVariant() > Other.GetVariant(); }
-        if (GetMajor() != Other.GetMajor()) { return GetMajor() > Other.GetMajor(); }
-        if (GetMinor() != Other.GetMinor()) { return GetMinor() > Other.GetMinor(); }
-        return GetPatch() > Other.GetPatch();
+        return otherVersion <=> m_version;
     }
 
     uint32_t m_version;

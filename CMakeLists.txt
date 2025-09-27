@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.26.0)
 
 project(tutorial)
 
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 set(CMAKE_CXX_EXTENSIONS OFF)
@@ -21,10 +21,7 @@ if(APPLE)
     file(APPEND ${SCRIPT_PATH} "xattr -d com.apple.quarantine exe")
 endif()
 
-find_package(glfw3 CONFIG REQUIRED)
 find_package(spdlog CONFIG REQUIRED)
-find_package(glm CONFIG REQUIRED)
-find_package(Vulkan REQUIRED)
 
 add_subdirectory(src/test)
 add_subdirectory(src/window)
@@ -32,7 +29,7 @@ add_subdirectory(src/vk_renderer)
 
 # Main executable
 add_executable(exe)
-target_compile_features(exe PUBLIC cxx_std_20)
+target_compile_features(exe PUBLIC cxx_std_23)
 
 target_sources(exe
     PRIVATE
@@ -40,9 +37,7 @@ target_sources(exe
 )
 
 target_link_libraries(exe PRIVATE
-        glfw
         spdlog::spdlog
-        Vulkan::Vulkan
         window_lib
         vk_renderer_lib
 )
@@ -61,9 +56,7 @@ target_sources(test_exe
 )
 
 target_link_libraries(test_exe PRIVATE
-        glfw
         spdlog::spdlog
-        Vulkan::Vulkan
         window_lib
         test_lib
 )
