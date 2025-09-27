@@ -57,7 +57,7 @@ target_sources(test_exe
 
 target_link_libraries(test_exe PRIVATE
         spdlog::spdlog
-        window_lib
+        window_lib_test
         test_lib
 )
 

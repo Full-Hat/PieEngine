@@ -6,7 +6,6 @@ module;
 #include <format>
 #include <unordered_set>
 #include <ranges>
-#include <sstream>
 module Vulkan;
 
 import Vulkan.Version;

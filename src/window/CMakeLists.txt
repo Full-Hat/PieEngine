@@ -49,7 +49,7 @@ if (window_lib_test)
         PUBLIC FILE_SET CXX_MODULES
             FILES ${ALL_CPPM}
     )
-    target_link_libraries(window_lib PRIVATE
+    target_link_libraries(window_lib_test PRIVATE
             glfw
             spdlog::spdlog
             test_lib
