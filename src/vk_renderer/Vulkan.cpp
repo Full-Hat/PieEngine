@@ -4,11 +4,29 @@
 module;
 #include <algorithm>
 #include <format>
+#include <numeric>
 #include <unordered_set>
 #include <ranges>
 module Vulkan;
 
+import vulkan_hpp;
 import Vulkan.Version;
+
+struct VulkanImpl {
+    VulkanImpl() = default;
+
+    vk::raii::Instance m_instance { nullptr };
+    vk::raii::Context m_context {};
+};
+
+Vulkan::Vulkan() : m_this(new VulkanImpl())
+{
+}
+
+Vulkan::~Vulkan()
+{
+    delete m_this;
+}
 
 template <typename T>
 constexpr bool is_string_like_v =
@@ -18,8 +36,8 @@ constexpr bool is_string_like_v =
     std::is_same_v<std::decay_t<T>, char*>;
 
 void Vulkan::InitInstance()
-    // input
 {
+    // input
     std::unordered_set<std::string> requiredExtensions;
 
     constexpr vk::ApplicationInfo appInfo {
@@ -36,9 +54,9 @@ void Vulkan::InitInstance()
     };
 
     // get available extensions
-    const auto availableExts = m_context.enumerateInstanceExtensionProperties();
+    const auto availableExts = m_this->m_context.enumerateInstanceExtensionProperties();
     // fix for new apple systems
-    if (Version(m_context.enumerateInstanceVersion()) > Version(0, 1, 3, 215))
+    if (Version(m_this->m_context.enumerateInstanceVersion()) > Version(0, 1, 3, 215))
     {
         requiredExtensions.emplace(vk::KHRPortabilityEnumerationExtensionName);
         instanceCreateInfo.flags |= vk::InstanceCreateFlagBits::eEnumeratePortabilityKHR;
@@ -62,30 +80,30 @@ void Vulkan::InitInstance()
 #ifdef NDEBUG // debug off
     if (!extsAreAvailable) {
 #endif
+        // return string in "extName1 [version1], extName2 [version2], .." format
         const auto formatExtensions = [](const auto &exts) {
-            using cont_t = std::decay_t<decltype(exts)>;
-            return std::ranges::fold_left(
-                exts | std::views::transform([&](const auto &ext) -> std::string {
-                    using el_t = std::decay_t<decltype(ext)>;
-                    if constexpr (std::is_same_v<el_t, vk::ExtensionProperties>) {
-                        return std::format("{} [{}]", ext.extensionName.data(), ext.specVersion);
-                    }
-                    else if constexpr (is_string_like_v<el_t>) {
-                        return std::format("{} [not provided]", ext);
-                    }
-                    else {
-                        static_assert(std::is_same_v<cont_t, void>, "Unsupported extension element type");
-                        return {};
-                    }
-                }),
-                std::string(),
-                [](std::string acc, const std::string &s) {
-                    return acc.empty() ? s : std::format("{}, {}", acc, s);
-                });
+            std::vector<std::string> parts;
+            parts.reserve(std::ranges::distance(exts)); // ok for random-access, else remove reserve
+
+            for (const auto &ext : exts) {
+                using el_t = std::decay_t<decltype(ext)>;
+                if constexpr (std::is_same_v<el_t, vk::ExtensionProperties>) {
+                    parts.push_back(std::format("{} [{}]", ext.extensionName.data(), ext.specVersion));
+                } else if constexpr (is_string_like_v<el_t>) {
+                    parts.push_back(std::format("{} [not provided]", ext));
+                } else {
+                    static_assert(std::is_same_v<el_t, void>, "Unsupported extension element type");
+                }
+            }
+
+            return std::accumulate(parts.begin(), parts.end(), std::string(),
+                                   [](std::string acc, const std::string &s) {
+                                      return acc.empty() ? s : std::format("{}, {}", acc, s);
+                                   });
         };
 
-        std::string availableExtsS = formatExtensions(availableExts);
-        std::string requiredExtsS = formatExtensions(requiredExtensions);
+        const std::string availableExtsS = formatExtensions(availableExts);
+        const std::string requiredExtsS = formatExtensions(requiredExtensions);
 
 #ifndef NDEBUG // debug on
         if (!extsAreAvailable) {
@@ -101,12 +119,12 @@ void Vulkan::InitInstance()
     // !!! set must be alive while extsNames is alive
     std::vector<const char*> extsNames;
     extsNames.reserve(requiredExtensions.size());
-    for (const auto requiredExt : requiredExtensions) {
+    for (const auto& requiredExt : requiredExtensions) {
         extsNames.push_back(requiredExt.c_str());
     }
     instanceCreateInfo.enabledExtensionCount = static_cast<uint32_t>(extsNames.size());
     instanceCreateInfo.ppEnabledExtensionNames = extsNames.data();
 
-    m_instance = vk::raii::Instance(m_context, instanceCreateInfo);
+    m_this->m_instance = vk::raii::Instance(m_this->m_context, instanceCreateInfo);
     logger->info(std::format("instance created"));
 }

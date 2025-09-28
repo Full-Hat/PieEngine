@@ -11,136 +11,48 @@ pie_collect_sources(
         NON_TEST_CPPM
         "vk_renderer_lib"
 )
+# Vulkan.cppm is public and should be exported (installed), remove from other non-public modules
+pie_list_remove_by_regex(NON_TEST_CPPM ".*Vulkan\.cppm")
+pie_list_remove_by_regex(ALL_CPPM ".*Vulkan\.cppm")
 
-################################################# Build #################################################
-
+find_package(Vulkan REQUIRED)
 add_library(vk_renderer_lib STATIC)
+target_include_directories(vk_renderer_lib
+        PRIVATE
+        "${Vulkan_INCLUDE_DIR}"
+)
 target_compile_features(vk_renderer_lib PUBLIC cxx_std_23)
 target_sources(vk_renderer_lib
         PRIVATE ${NON_TEST_CPP}
         PUBLIC FILE_SET CXX_MODULES
-        FILES ${NON_TEST_CPPM}
+            FILES "${CMAKE_CURRENT_SOURCE_DIR}/Vulkan.cppm"
+        PRIVATE FILE_SET nonExported TYPE CXX_MODULES BASE_DIRS "${Vulkan_INCLUDE_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}"
+            FILES ${NON_TEST_CPPM} "${Vulkan_INCLUDE_DIR}/vulkan/vulkan.cppm"
 )
 
-# include vulkan
-find_package(Vulkan REQUIRED)
-add_library(VulkanCppModule STATIC)
-add_library(Vulkan::cppm ALIAS VulkanCppModule)
-
-target_compile_definitions(VulkanCppModule PUBLIC
+# link libs
+target_compile_definitions(vk_renderer_lib PUBLIC
         VULKAN_HPP_DISPATCH_LOADER_DYNAMIC=1
         VULKAN_HPP_NO_STRUCT_CONSTRUCTORS=1
 )
-target_include_directories(VulkanCppModule
-        PRIVATE
-        "${Vulkan_INCLUDE_DIR}"
-)
-target_link_libraries(VulkanCppModule
-        PRIVATE
-        Vulkan::Vulkan
-)
-set_target_properties(VulkanCppModule PROPERTIES CXX_STANDARD 23)
-target_sources(VulkanCppModule
-        PUBLIC
-        FILE_SET cxx_modules TYPE CXX_MODULES
-        BASE_DIRS
-        "${Vulkan_INCLUDE_DIR}"
-        FILES
-        "${Vulkan_INCLUDE_DIR}/vulkan/vulkan.cppm"
-)
-
-# link to lib
 find_package(spdlog CONFIG REQUIRED)
-target_link_libraries(vk_renderer_lib PUBLIC
-        spdlog::spdlog
-        PRIVATE VulkanCppModule
+target_link_libraries(vk_renderer_lib
+        PUBLIC spdlog::spdlog
+        PRIVATE Vulkan::Vulkan
 )
 
-option(vk_renderer_lib_test "Should this CMake build test version" OFF)
-if (vk_renderer_lib_test)
-    add_library(vk_renderer_lib_test SHARED)
+if (Pie_ENABLE_TESTING_PACK)
+    add_library(vk_renderer_lib_test STATIC)
     target_sources(vk_renderer_lib_test
-            PRIVATE
-            ${ALL_CPP}
+            PRIVATE ${ALL_CPP}
             PUBLIC FILE_SET CXX_MODULES
-            FILES ${ALL_CPPM}
+            FILES "${CMAKE_CURRENT_SOURCE_DIR}/Vulkan.cppm"
+            PRIVATE FILE_SET nonExported TYPE CXX_MODULES BASE_DIRS "${Vulkan_INCLUDE_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}"
+            FILES ${ALL_CPPM} "${Vulkan_INCLUDE_DIR}/vulkan/vulkan.cppm"
     )
-    target_link_libraries(vk_renderer_lib_test PRIVATE
-            spdlog::spdlog
-            test_lib
-            VulkanCppModule
+    target_link_libraries(vk_renderer_lib_test
+            PUBLIC spdlog::spdlog
+                   test_lib
+            PRIVATE Vulkan::Vulkan
     )
 endif ()
-
-################################################# Install #################################################
-
-install(TARGETS VulkanCppModule
-        EXPORT vk_renderer_libInternalTargets
-        FILE_SET cxx_modules DESTINATION include
-        ARCHIVE DESTINATION lib
-        LIBRARY DESTINATION lib
-        RUNTIME DESTINATION bin
-)
-
-install(EXPORT vk_renderer_libInternalTargets
-        FILE vk_renderer_libInternalTargets.cmake
-        NAMESPACE vk_renderer_lib::
-        DESTINATION lib/cmake/vk_renderer_lib
-)
-
-target_include_directories(vk_renderer_lib
-        PUBLIC
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
-        $<INSTALL_INTERFACE:include>
-)
-
-install(TARGETS vk_renderer_lib
-        EXPORT vk_renderer_libTargets
-        FILE_SET CXX_MODULES DESTINATION include
-        ARCHIVE DESTINATION lib
-        LIBRARY DESTINATION lib
-        RUNTIME DESTINATION bin
-)
-
-# Export the targets to a CMake package
-install(EXPORT vk_renderer_libTargets
-        FILE vk_renderer_libTargets.cmake
-        NAMESPACE vk_renderer_lib::
-        DESTINATION lib/cmake/vk_renderer_lib
-)
-include(CMakePackageConfigHelpers)
-
-configure_package_config_file(
-        "${CMAKE_CURRENT_SOURCE_DIR}/cmake/vk_renderer_libConfig.cmake.in"
-        "${CMAKE_CURRENT_BINARY_DIR}/vk_renderer_libConfig.cmake"
-        INSTALL_DESTINATION lib/cmake/vk_renderer_lib
-)
-
-install(FILES
-        "${CMAKE_CURRENT_BINARY_DIR}/vk_renderer_libConfig.cmake"
-        DESTINATION lib/cmake/vk_renderer_lib
-)
-
-write_basic_package_version_file(
-        "${CMAKE_CURRENT_BINARY_DIR}/vk_renderer_libConfigVersion.cmake"
-        VERSION ${PROJECT_VERSION}
-        COMPATIBILITY SameMajorVersion
-)
-
-install(FILES
-        "${CMAKE_CURRENT_BINARY_DIR}/vk_renderer_libConfig.cmake"
-        "${CMAKE_CURRENT_BINARY_DIR}/vk_renderer_libConfigVersion.cmake"
-        DESTINATION lib/cmake/vk_renderer_lib
-)
-
-################################################# Install #################################################
-
-#include(CPack)
-#set(CPACK_PACKAGE_NAME "vk_renderer_lib")
-#set(CPACK_PACKAGE_VENDOR "PikemenStudio")
-#set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Vulkan-based rendering library with C++23 support")
-#set(CPACK_PACKAGE_VERSION_MAJOR ${PROJECT_VERSION_MAJOR})
-#set(CPACK_PACKAGE_VERSION_MINOR ${PROJECT_VERSION_MINOR})
-#set(CPACK_PACKAGE_VERSION_PATCH 0)
-#
-#set(CPACK_GENERATOR "ZIP")  # Or "TGZ", "DEB", "NSIS", etc.

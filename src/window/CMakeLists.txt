@@ -37,11 +37,9 @@ find_package(glm CONFIG REQUIRED)
 target_link_libraries(window_lib PRIVATE
         glfw
         spdlog::spdlog
-        test_lib
 )
 
-option(window_lib_test "Should this CMake build test version" ON)
-if (window_lib_test)
+if (Pie_ENABLE_TESTING_PACK)
     add_library(window_lib_test SHARED)
     target_sources(window_lib_test
         PRIVATE

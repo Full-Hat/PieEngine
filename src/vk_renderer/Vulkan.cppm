@@ -9,8 +9,6 @@ module;
 
 export module Vulkan;
 
-import vulkan_hpp;
-
 constexpr int_fast32_t one_megabyte = 1048576;
 auto logger = [](){
     auto logger = spdlog::rotating_logger_mt("pie_engine::vk_renderer", "logs/vk_renderer_rotating.txt", one_megabyte * 5, 3);
@@ -25,11 +23,15 @@ auto logger = [](){
     return logger;
 }();
 
+struct VulkanImpl;
+
 export class Vulkan {
 public:
     void InitInstance();
 
+    Vulkan();
+    ~Vulkan();
+
 private:
-    vk::raii::Instance m_instance { nullptr };
-    vk::raii::Context m_context;
+    VulkanImpl* m_this;
 };
