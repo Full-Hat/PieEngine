@@ -10,6 +10,9 @@ set(CMAKE_CXX_SCAN_FOR_MODULES ON) # <- fixes error "module not found"
 
 add_library(test_lib STATIC)
 target_compile_features(test_lib PUBLIC cxx_std_23)
+# | fixes error relocation R_AARCH64_ADR_PREL_PG_HI21
+# v ... can not be used when making a shared object; recompile with -fPIC
+target_compile_options(test_lib PRIVATE -fPIC)
 target_sources(test_lib
     PUBLIC FILE_SET CXX_MODULES
         FILES test_utils.cppm

@@ -1,4 +1,4 @@
-FROM ubuntu:latest
+FROM --platform=linux/arm64 ubuntu:latest
 
 RUN apt-get update && apt-get install -y cmake build-essential ninja-build git curl zip unzip tar
 
@@ -9,7 +9,11 @@ RUN wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add - \
 RUN apt-get install -y clang-20 lld-20 llvm-20-tools llvm-20-dev
 
 # GLFW requirements for X11
-RUN apt-get install -y libxinerama-dev libxcursor-dev xorg-dev libglu1-mesa-dev pkg-config
+RUN apt-get install -y libxinerama-dev libxcursor-dev xorg-dev libglu1-mesa-dev libwayland-dev pkg-config
+
+# MacOS and Ubuntu dependencies
+RUN apt-get update && apt-get install -y autoconf automake autoconf-archive
+RUN apt-get update && apt-get install -y libtool python3-jinja2
 
 # Install Xvfb for virtual display server (essential for GLFW tests in headless environments)
 RUN apt-get install -y xvfb x11-utils

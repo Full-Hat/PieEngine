@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.26.0)
 
 project(test LANGUAGES CXX VERSION 1.0)
 
+add_compile_definitions(VULKAN_HPP_NO_STRUCT_CONSTRUCTORS) # <- must be added before vulkan.cppm compilation to bmi
+
 include("${CMAKE_CURRENT_SOURCE_DIR}/../cmake_utils/CMakeUtils.cmake")
 pie_collect_sources(
         ${CMAKE_CURRENT_SOURCE_DIR}

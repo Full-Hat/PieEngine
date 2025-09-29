@@ -53,7 +53,10 @@ jobs:
             && sudo apt-get update
           sudo apt-get install -y clang-20 lld-20 llvm-20-tools llvm-20-dev
           # glfw dependencies
-          sudo apt-get install -y libxinerama-dev libxcursor-dev xorg-dev libglu1-mesa-dev pkg-config
+          sudo apt-get install -y libxinerama-dev libxcursor-dev xorg-dev libglu1-mesa-dev libwayland-dev pkg-config
+          # Ubuntu/arm64 dependencies
+          sudo apt-get update && sudo apt-get install -y autoconf automake autoconf-archive
+          sudo apt-get update && sudo apt-get install -y libtool python3-jinja2
           # BEGIN FOR HEADLESS TESTS, DON'T USE ON SYSTEMS WITH A DISPLAY
           # Install Xvfb for virtual display server (essential for GLFW tests in headless environments)
           sudo apt-get install -y xvfb x11-utils
