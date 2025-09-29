@@ -25,6 +25,7 @@ jobs:
         run: |
           cmake -DCMAKE_C_COMPILER=/opt/homebrew/opt/llvm@20/bin/clang\
                 -DCMAKE_CXX_COMPILER=/opt/homebrew/opt/llvm@20/bin/clang++\
+                -DCMAKE_OSX_SYSROOT=$SDKROOT\
                 --preset VcpkgDebug
           cmake --build build/debug
       - name: run tests
