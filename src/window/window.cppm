@@ -4,7 +4,6 @@
 
 module;
 
-#include <iostream>
 #include <format>
 #include <cstdint>
 #include <memory>

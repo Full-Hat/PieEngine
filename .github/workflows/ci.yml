@@ -31,7 +31,7 @@ jobs:
       - name: install package manager and libraries
         run: |
           ./vcpkg/bootstrap-vcpkg.sh
-          ./vcpkg/vcpkg install
+          ./vcpkg/vcpkg install --binarycaching
       - name: configure and build project
         run: |
           cmake -DCMAKE_C_COMPILER=/opt/homebrew/opt/llvm@20/bin/clang\
