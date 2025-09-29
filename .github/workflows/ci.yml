@@ -23,8 +23,9 @@ jobs:
           ./vcpkg/vcpkg install
       - name: configure and build project
         run: |
-          LLVM_VERSION=$(/opt/homebrew/opt/llvm/bin/llvm-config --version)
-          cmake -DCMAKE_C_COMPILER=/opt/homebrew/Cellar/llvm/${LLVM_VERSION}/bin/clang -DCMAKE_CXX_COMPILER=/opt/homebrew/Cellar/llvm/${LLVM_VERSION}/bin/clang++ --preset VcpkgDebug
+          cmake -DCMAKE_C_COMPILER=/opt/homebrew/opt/llvm@20/bin/clang\
+                -DCMAKE_CXX_COMPILER=/opt/homebrew/opt/llvm@20/bin/clang++\
+                --preset VcpkgDebug
           cmake --build build/debug
       - name: run tests
         run: |
