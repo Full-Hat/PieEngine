@@ -29,8 +29,8 @@ GLFWwindow* create_window(int width, int height, std::string title);
 void terminate_glfw(); // Call this when all windows are done
 
 //! @section pie engine logging
-constexpr int_fast32_t one_megabyte = 1048576;
 auto logger = [](){
+    static constexpr int_fast32_t one_megabyte = 1048576;
     auto logger = spdlog::rotating_logger_mt("pie_engine::window", "logs/rotating.txt", one_megabyte * 5, 3);
     // Debug -> print all, flush on all
     // Release -> print info and higher, flush on error only
