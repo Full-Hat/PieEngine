@@ -38,6 +38,10 @@ target_compile_definitions(vk_renderer_lib PUBLIC
         VULKAN_HPP_NO_STRUCT_CONSTRUCTORS=1
 )
 find_package(spdlog CONFIG REQUIRED)
+set_target_properties(vk_renderer_lib PROPERTIES
+        BUILD_WITH_INSTALL_RPATH TRUE
+        INSTALL_RPATH "$<$<PLATFORM_ID:Darwin>:@executable_path/;@loader_path/>;$<$<PLATFORM_ID:Linux>:$ORIGIN/>"
+)
 target_link_libraries(vk_renderer_lib
         PUBLIC spdlog::spdlog
         PRIVATE Vulkan::Vulkan
@@ -51,6 +55,10 @@ if (Pie_ENABLE_TESTING_PACK)
             FILES "${CMAKE_CURRENT_SOURCE_DIR}/Vulkan.cppm"
             PRIVATE FILE_SET nonExported TYPE CXX_MODULES BASE_DIRS "${Vulkan_INCLUDE_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}"
             FILES ${ALL_CPPM} "${Vulkan_INCLUDE_DIR}/vulkan/vulkan.cppm"
+    )
+    set_target_properties(vk_renderer_lib_test PROPERTIES
+            BUILD_WITH_INSTALL_RPATH TRUE
+            INSTALL_RPATH "$<$<PLATFORM_ID:Darwin>:@executable_path/;@loader_path/>;$<$<PLATFORM_ID:Linux>:$ORIGIN/>"
     )
     target_link_libraries(vk_renderer_lib_test
             PUBLIC spdlog::spdlog

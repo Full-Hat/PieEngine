@@ -78,7 +78,7 @@ install_system() {
   run_cmd $SUDO apt-get install -y libxinerama-dev libxcursor-dev xorg-dev libglu1-mesa-dev libwayland-dev pkg-config
 
   # Ubuntu/arm64 dependencies
-  run_cmd $SUDO apt-get update && $SUDO apt-get install -y autoconf automake autoconf-archive
+  run_cmd $SUDO apt-get update && $SUDO apt-get install -y libltdl-dev autoconf automake autoconf-archive
   run_cmd $SUDO apt-get update && $SUDO apt-get install -y libtool python3-jinja2
 
   if ! has_display; then
