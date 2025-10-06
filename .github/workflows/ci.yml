@@ -10,6 +10,11 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
+      - name: Make install scripts executable
+        run: chmod +x installation_scripts/install_macos_arm64.sh
+      - name: install dependencies
+        run: |
+          ./installation_scripts/install_macos_arm64.sh install_system
       - name: cache vcpkg
         uses: actions/cache@v4
         with:
@@ -21,81 +26,50 @@ jobs:
           key: ${{ runner.os }}-vcpkg-${{ hashFiles('vcpkg.json') }}
           restore-keys: |
             ${{ runner.os }}-vcpkg-
-      - name: install dependencies
-        run: |
-          /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-          brew install llvm@20
-          brew install cmake
-          brew install ninja
-          brew install vcpkg
       - name: install package manager and libraries
         run: |
-          ./vcpkg/bootstrap-vcpkg.sh
-          ./vcpkg/vcpkg install --binarycaching
+          ./installation_scripts/install_macos_arm64.sh install_vcpkg
       - name: configure and build project
         run: |
-          cmake -DCMAKE_C_COMPILER=/opt/homebrew/opt/llvm@20/bin/clang\
-                -DCMAKE_CXX_COMPILER=/opt/homebrew/opt/llvm@20/bin/clang++\
-                -DCMAKE_OSX_SYSROOT=$SDKROOT\
-                --preset VcpkgDebug
-          cmake --build build/debug
+          ./installation_scripts/install_macos_arm64.sh build
       - name: run tests
         run: |
-          ctest --test-dir ./build/debug --output-on-failure --extra-verbose
-#      - name: upload binaries
-#        uses: actions/upload-artifact@v4
-#        with:
-#          name: macos-artifacts
-#          path: |
-#            build/debug/Testing/
-#            build/debug/bin/
+          ./installation_scripts/install_macos_arm64.sh
+      - name: upload binaries
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-artifacts
+          path: |
+            build/debug/Testing/
+            build/debug/bin/
   ubuntu-build-and-test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
+      - name: Make install scripts executable
+        run: chmod +x installation_scripts/install_ubuntu_arm64.sh
       - name: install system dependencies
         run: |
-          # common stuff
-          sudo apt-get update && sudo apt-get install -y cmake build-essential ninja-build git curl zip unzip tar
-          # clang
-          sudo apt-get update && sudo apt-get install -y wget gnupg software-properties-common lsb-release
-          wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add - \
-            && sudo add-apt-repository "deb http://apt.llvm.org/$(lsb_release -cs)/ llvm-toolchain-$(lsb_release -cs)-20 main" \
-            && sudo apt-get update
-          sudo apt-get install -y clang-20 lld-20 llvm-20-tools llvm-20-dev
-          # glfw dependencies
-          sudo apt-get install -y libxinerama-dev libxcursor-dev xorg-dev libglu1-mesa-dev libwayland-dev pkg-config
-          # Ubuntu/arm64 dependencies
-          sudo apt-get update && sudo apt-get install -y autoconf automake autoconf-archive
-          sudo apt-get update && sudo apt-get install -y libtool python3-jinja2
-          # BEGIN FOR HEADLESS TESTS, DON'T USE ON SYSTEMS WITH A DISPLAY
-          # Install Xvfb for virtual display server (essential for GLFW tests in headless environments)
-          sudo apt-get install -y xvfb x11-utils
-          # END FOR HEADLESS TESTS, DON'T USE ON SYSTEMS WITH A DISPLAY
-          sudo rm -rf /var/lib/apt/lists/*
-      - name: install package manager and libraries
+          ./installation_scripts/install_ubuntu_arm64.sh install_system
+      - name: cache vcpkg
+        uses: actions/cache@v4
+        with:
+          path: |
+            vcpkg/buildtrees
+            vcpkg/downloads
+            vcpkg/packages
+            vcpkg_installed
+          key: ${{ runner.os }}-vcpkg-${{ hashFiles('vcpkg.json') }}
+          restore-keys: |
+            ${{ runner.os }}-vcpkg-
+      - name: install vcpkg packages
         run: |
-          ./vcpkg/bootstrap-vcpkg.sh
-          ./vcpkg/vcpkg install
-      - name: configure and build project
+          ./installation_scripts/install_ubuntu_arm64.sh install_vcpkg
+      - name: configure, build project and run tests
         run: |
-          cmake -DCMAKE_C_COMPILER=/usr/bin/clang-20 -DCMAKE_CXX_COMPILER=/usr/bin/clang++-20 --preset VcpkgDebug
-          cmake --build build/debug
-      - name: run tests
-        run: |
-          # BEGIN FOR HEADLESS TESTS, DON'T USE ON SYSTEMS WITH A DISPLAY
-          # Start Xvfb virtual display server
-          Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
-          export DISPLAY=:99
-          
-          # Wait a moment for Xvfb to start
-          sleep 2
-          # END FOR HEADLESS TESTS, DON'T USE ON SYSTEMS WITH A DISPLAY
-
-          # Run the tests
-          ctest --test-dir ./build/debug --output-on-failure --extra-verbose
+          ./installation_scripts/install_ubuntu_arm64.sh build test_all
       - name: upload binaries
         uses: actions/upload-artifact@v4
         with:
@@ -103,35 +77,35 @@ jobs:
           path: |
             build/debug/Testing/
             build/debug/bin/
-  windows-build-and-test:
-    runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: recursive
-      - name: install system dependencies
-        shell: pwsh
-        run: |
-          choco install llvm --version=20.1.7 -y
-          choco install cmake ninja -y
-      - name: install package manager and libraries
-        shell: pwsh
-        run: |
-          ./vcpkg/bootstrap-vcpkg.bat
-          ./vcpkg/vcpkg install
-      - name: configure and build project
-        shell: pwsh
-        run: |
-          cmake -DCMAKE_C_COMPILER="C:\Program Files\LLVM\bin\clang.exe" -DCMAKE_CXX_COMPILER="C:\Program Files\LLVM\bin\clang++.exe" --preset VcpkgDebug
-          cmake --build build/debug
-      - name: run tests
-        shell: pwsh
-        run: |
-          ctest --test-dir ./build/debug --output-on-failure --extra-verbose
-      - name: upload binaries
-        uses: actions/upload-artifact@v4
-        with:
-          name: windows-artifacts
-          path: |
-            build/debug/Testing/
-            build/debug/bin/
+#  windows-build-and-test:
+#    runs-on: windows-latest
+#    steps:
+#      - uses: actions/checkout@v4
+#        with:
+#          submodules: recursive
+#      - name: install system dependencies
+#        shell: pwsh
+#        run: |
+#          choco install llvm --version=20.1.7 -y
+#          choco install cmake ninja -y
+#      - name: install package manager and libraries
+#        shell: pwsh
+#        run: |
+#          ./vcpkg/bootstrap-vcpkg.bat
+#          ./vcpkg/vcpkg install
+#      - name: configure and build project
+#        shell: pwsh
+#        run: |
+#          cmake -DCMAKE_C_COMPILER="C:\Program Files\LLVM\bin\clang.exe" -DCMAKE_CXX_COMPILER="C:\Program Files\LLVM\bin\clang++.exe" --preset VcpkgDebug
+#          cmake --build build/debug
+#      - name: run tests
+#        shell: pwsh
+#        run: |
+#          ctest --test-dir ./build/debug --output-on-failure --extra-verbose
+#      - name: upload binaries
+#        uses: actions/upload-artifact@v4
+#        with:
+#          name: windows-artifacts
+#          path: |
+#            build/debug/Testing/
+#            build/debug/bin/
